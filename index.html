@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#d62828">
+<meta name="mobile-web-app-capable" content="yes">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Lift Log</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: a no-nonsense training logbook, fast to use between sets.
+   IDEA: the gym's whiteboard + competition plates: big heavy numerals.
+   PICTURE: the workout list itself, PRs hanging large at the right.
+   COLOUR and TYPE: plate red band, white/charcoal ground, plate blue support; Archivo condensed numerals.
+   LAYOUT: one column, day tabs under the band, exercises in order, backup at the foot. */
+:root{color-scheme:light dark;
+--bg:light-dark(#ffffff,#121212);--ink:light-dark(#141414,#f2f2f2);--mute:light-dark(#666,#9a9a9a);
+--line:light-dark(#e2e2e2,#2b2b2b);--card:light-dark(#f4f4f3,#1b1b1b);
+--red:light-dark(#d62828,#ff5252);--blue:light-dark(#1f4fd1,#7c9bff);--band:#d62828}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Archivo,system-ui,sans-serif;overflow-x:clip}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;border:0;background:none;min-height:44px;border-radius:10px;padding:0 14px}
+button:focus-visible,input:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+input{min-height:44px;font-size:16px;border:1.5px solid var(--line);background:var(--bg);border-radius:10px;padding:0 12px;width:100%}
+.wrap{max-width:720px;margin:0 auto;padding:0 max(4vw,14px)}
+.top{background:var(--band);color:#fff}
+.top .wrap{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:18px 16px}
+h1{margin:0;font-size:34px;line-height:1.05;font-weight:800;font-stretch:75%;letter-spacing:-.01em}
+.pill{font-size:13px;background:rgba(255,255,255,.18);padding:5px 10px;border-radius:99px;white-space:nowrap}
+.days{display:flex;gap:8px;overflow-x:auto;padding-block:14px 10px;scrollbar-width:none}
+.chip{flex:none;border:1.5px solid var(--line);font-weight:600;background:var(--bg)}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.chip.add{color:var(--blue);border-style:dashed}
+.inline{display:flex;gap:8px;margin:6px 0 14px}
+.inline button,.primary{background:var(--blue);color:#fff;font-weight:700;flex:none}
+.ghost{border:1.5px solid var(--line);flex:none}
+.dayhead{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:10px 0 6px}
+h2{margin:0 auto 0 0;font-size:32px;line-height:1.05;font-weight:800;font-stretch:80%;text-wrap:balance}
+.small{font-size:14px;color:var(--mute);min-height:40px;padding:0 10px}
+ol{list-style:none;margin:0;padding:0}
+.ex{border-top:1.5px solid var(--line)}
+.ex:last-child{border-bottom:1.5px solid var(--line)}
+.exhead{width:100%;display:grid;grid-template-columns:28px minmax(0,1fr) auto;align-items:center;gap:10px;padding:14px 2px;text-align:left;border-radius:0}
+.idx{font-weight:800;font-stretch:70%;font-size:20px;color:var(--mute)}
+.exname{font-weight:700;font-size:17px;line-height:1.25}
+.exname small{display:block;font-weight:400;font-size:13px;color:var(--mute)}
+.pr{text-align:right;font-weight:800;font-stretch:70%;font-size:26px;line-height:1.05;white-space:nowrap;font-variant-numeric:tabular-nums}
+.pr span{display:block}.pr span+span{font-size:20px;color:var(--mute)}
+.pr small{font-size:.55em;font-weight:600;margin-left:1px}
+.pr.none{font-size:14px;font-weight:500;color:var(--mute);font-stretch:100%}
+.pr span.up{color:#178a3e;font-size:13px;font-weight:700;font-stretch:100%;display:block}
+.panel{background:var(--card);border-radius:14px;padding:14px;margin:0 0 14px}
+.panel h3{margin:0 0 8px;font-size:16px}
+.sets{display:grid;grid-template-columns:64px minmax(0,1fr) 18px minmax(0,1fr);gap:8px;align-items:center;margin-bottom:8px}
+.sets label{font-size:14px;font-weight:700}.x{text-align:center;color:var(--mute)}
+.daterow{display:flex;gap:8px;align-items:center;margin-top:4px}
+.daterow input{flex:1}
+table{width:100%;border-collapse:collapse;font-size:15px;margin-top:14px}
+th{text-align:left;font-size:13px;color:var(--mute);font-weight:600;padding:4px 0}
+td{padding:6px 0;border-top:1px solid var(--line);font-variant-numeric:tabular-nums;white-space:nowrap}
+td.del{text-align:right;width:44px}
+td.del button{color:var(--mute);padding:0 8px}
+.tools{display:flex;gap:6px;flex-wrap:wrap;margin-top:14px}
+.danger{color:var(--red)}.danger.arm{background:var(--red);color:#fff}
+.err{color:var(--red);font-size:14px;margin:6px 0 0}
+.empty{padding:28px 0;color:var(--mute)}
+.empty b{display:block;color:var(--ink);font-size:20px;margin-bottom:4px}
+.foot{margin:34px 0 40px;padding-top:16px;border-top:1.5px solid var(--line)}
+.foot h3{margin:0 0 4px;font-size:16px}.foot p{margin:0 0 10px;color:var(--mute);font-size:14px}
+.foot .row{display:flex;gap:8px;flex-wrap:wrap}
+#msg{min-height:20px;font-size:14px;margin-top:8px}
+.sample{font-size:13px;color:var(--mute);margin:8px 0 0}
+@media(prefers-reduced-motion:no-preference){.panel{animation:drop .18s ease-out}@keyframes drop{from{opacity:0;transform:translateY(-4px)}}}
+</style>
+</head>
+<body>
+<header class="top"><div class="wrap"><h1>Lift Log</h1><span id="sync" class="pill">Loading…</span></div></header>
+<div class="wrap">
+  <nav id="days" class="days" aria-label="Workout days"></nav>
+  <div id="addDayBox"></div>
+  <main id="view"></main>
+  <section class="foot">
+    <h3>Backup</h3>
+    <p>Your log is stored on this phone only. Export a backup file now and then; uninstalling the app or clearing Chrome data erases it.</p>
+    <div class="row">
+      <button class="ghost" data-act="export">Export file</button>
+      <button class="ghost" data-act="copy">Copy as text</button>
+      <button class="ghost" data-act="import">Import file</button>
+      <input type="file" id="file" accept=".json,application/json" hidden>
+    </div>
+    <div id="msg" role="status"></div>
+  </section>
+</div>
+<script>
+{
+const K='liftlog.v1';
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const uid=()=>Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4);
+const today=()=>new Date().toLocaleDateString('en-CA');
+const num=n=>String(Math.round(n*100)/100);
+const nice=d=>{const t=new Date(d+'T00:00');return isNaN(t)?d:t.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})};
+const valid=o=>o&&typeof o==='object'&&Array.isArray(o.days);
+const clone=o=>JSON.parse(JSON.stringify(o));
+
+let state={days:[],updated:0};
+try{const c=JSON.parse(localStorage.getItem(K));if(valid(c))state=c}catch(e){}
+let cur=state.days[0]?.id||null, open=null, addingDay=false, renamingDay=false, renamingEx=null, armed=null, armTimer=null, pendingImport=null, formErr={};
+
+/* ---------- storage (on this phone) ---------- */
+const setSync=t=>{$('#sync').textContent=t};
+let canSave=true;
+function cache(){try{localStorage.setItem(K,JSON.stringify(state));canSave=true}catch(e){canSave=false}}
+function save(){
+  state.updated=Date.now();cache();
+  setSync(canSave?'Saved ✓':'Not saved!');
+  render();
+}
+try{localStorage.setItem(K+'.t','1')}catch(e){canSave=false}
+setSync(canSave?'Saved ✓':'Storage blocked');
+// ask Android not to auto-clear this app's storage
+if(navigator.storage&&navigator.storage.persist)navigator.storage.persist().catch(()=>{});
+if('serviceWorker' in navigator)window.addEventListener('load',()=>navigator.serviceWorker.register('sw.js').catch(()=>{}));
+// remind about backups every ~2 weeks
+let lastBk=0;try{lastBk=+localStorage.getItem(K+'.bk');if(!lastBk){lastBk=Date.now();localStorage.setItem(K+'.bk',lastBk)}}catch(e){lastBk=Date.now()}
+
+/* ---------- helpers ---------- */
+const day=()=>state.days.find(d=>d.id===cur);
+const exById=id=>day()?.exercises.find(x=>x.id===id);
+const sorted=h=>[...h].sort((a,b)=>b.date.localeCompare(a.date)||b.t-a.t);
+const setTxt=s=>s?`${num(s.w)}<small>kg</small> × ${s.r}`:'';
+function gain(a,b){
+  if(!a||!b)return'';
+  if(a.s1.w>b.s1.w)return`+${num(a.s1.w-b.s1.w)} kg`;
+  if(a.s1.w===b.s1.w&&a.s1.r>b.s1.r)return`+${a.s1.r-b.s1.r} rep${a.s1.r-b.s1.r>1?'s':''}`;
+  return'';
+}
+function arm(key,btn){
+  if(armed===key){armed=null;clearTimeout(armTimer);return true}
+  armed=key;clearTimeout(armTimer);armTimer=setTimeout(()=>{armed=null;render()},3500);render();return false;
+}
+const delBtn=(key,label,act,id='')=>`<button class="small danger ${armed===key?'arm':''}" data-act="${act}" data-id="${id}">${armed===key?'Tap again to delete':label}</button>`;
+
+/* ---------- render ---------- */
+function render(){
+  $('#days').innerHTML=state.days.map(d=>`<button class="chip ${d.id===cur?'on':''}" data-act="day" data-id="${d.id}">${esc(d.name)}</button>`).join('')
+    +`<button class="chip add" data-act="addDay">+ Day</button>`;
+  $('#addDayBox').innerHTML=addingDay?`<form class="inline" id="fAddDay"><input name="n" placeholder="Day name, e.g. Push" maxlength="40" autocomplete="off"><button>Add</button><button type="button" class="ghost" style="background:none;color:inherit" data-act="cancelDay">Cancel</button></form>`:'';
+  const d=day();
+  if(!d){
+    $('#view').innerHTML=`<div class="empty"><b>No workout days yet</b>Tap “+ Day” to create one (e.g. Push, Pull, Legs), then add exercises in the order you do them.<div class="inline" style="margin-top:14px"><button class="primary" data-act="addDay">Create first day</button><button class="ghost" data-act="example">Load an example</button></div></div>`;
+    if(addingDay)$('#fAddDay input').focus();
+    return;
+  }
+  const head=renamingDay
+    ?`<form class="inline" id="fRenameDay" style="width:100%"><input name="n" value="${esc(d.name)}" maxlength="40"><button>Save</button></form>`
+    :`<h2>${esc(d.name)}</h2><button class="small" data-act="renameDay">Rename</button>${delBtn('day:'+d.id,'Delete day','delDay',d.id)}`;
+  const rows=d.exercises.map((x,i)=>{
+    const h=sorted(x.history),pr=h[0],g=gain(h[0],h[1]),isOpen=open===x.id;
+    const prHtml=pr?`<span class="pr"><span>${setTxt(pr.s1)}</span>${pr.s2?`<span>${setTxt(pr.s2)}</span>`:''}${g?`<span class="up">▲ ${g}</span>`:''}</span>`:`<span class="pr none">No PR yet</span>`;
+    let panel='';
+    if(isOpen){
+      const p=pr||{s1:{w:'',r:''},s2:{w:'',r:''}};
+      panel=`<div class="panel">
+        <h3>${pr?'New PR':'Log first PR'}</h3>
+        <form id="fLog" data-id="${x.id}">
+          <div class="sets"><label for="w1">Set 1</label><input id="w1" name="w1" inputmode="decimal" placeholder="kg" value="${p.s1?.w??''}"><span class="x">×</span><input name="r1" inputmode="numeric" placeholder="reps" value="${p.s1?.r??''}"></div>
+          <div class="sets"><label for="w2">Set 2</label><input id="w2" name="w2" inputmode="decimal" placeholder="kg" value="${p.s2?.w??''}"><span class="x">×</span><input name="r2" inputmode="numeric" placeholder="reps" value="${p.s2?.r??''}"></div>
+          <div class="daterow"><input type="date" name="date" value="${today()}" aria-label="Date"><button class="primary">Save PR</button></div>
+          ${formErr[x.id]?`<p class="err">${esc(formErr[x.id])}</p>`:''}
+        </form>
+        ${h.length?`<table><thead><tr><th>Date</th><th>Set 1</th><th>Set 2</th><th></th></tr></thead><tbody>${h.map(e=>`<tr><td>${nice(e.date)}</td><td>${num(e.s1.w)} × ${e.s1.r}</td><td>${e.s2?num(e.s2.w)+' × '+e.s2.r:'–'}</td><td class="del"><button data-act="delEntry" data-id="${x.id}" data-t="${e.t}" aria-label="Delete entry" class="${armed==='e:'+e.t?'danger arm':''}">${armed==='e:'+e.t?'Delete?':'✕'}</button></td></tr>`).join('')}</tbody></table>`:''}
+        ${renamingEx===x.id?`<form class="inline" id="fRenameEx" data-id="${x.id}" style="margin-top:14px"><input name="n" value="${esc(x.name)}" maxlength="60"><button>Save</button></form>`:''}
+        <div class="tools">
+          <button class="small ghost" data-act="up" data-id="${x.id}" ${i===0?'disabled':''} aria-label="Move up">↑ Up</button>
+          <button class="small ghost" data-act="down" data-id="${x.id}" ${i===d.exercises.length-1?'disabled':''} aria-label="Move down">↓ Down</button>
+          <button class="small" data-act="renameEx" data-id="${x.id}">Rename</button>
+          ${delBtn('ex:'+x.id,'Delete exercise','delEx',x.id)}
+        </div></div>`;
+    }
+    return`<li class="ex"><button class="exhead" data-act="toggle" data-id="${x.id}" aria-expanded="${isOpen}"><span class="idx">${i+1}</span><span class="exname">${esc(x.name)}${pr?`<small>${nice(pr.date)}</small>`:''}</span>${prHtml}</button>${panel}</li>`;
+  }).join('');
+  $('#view').innerHTML=`<div class="dayhead">${head}</div>
+    ${d.exercises.length?`<ol>${rows}</ol>`:`<p class="empty" style="padding:10px 0">No exercises yet. Add them in the order you do them.</p>`}
+    <form class="inline" id="fAddEx" style="margin-top:14px"><input name="n" placeholder="Add exercise, e.g. Bench press" maxlength="60" autocomplete="off"><button>Add</button></form>
+    ${d.sample?'<p class="sample">Example day with made-up numbers. Delete it when you have your own.</p>':''}`;
+  if(addingDay)$('#fAddDay input').focus();
+  if(renamingDay)$('#fRenameDay input').focus();
+  if(renamingEx)$('#fRenameEx input')?.focus();
+}
+
+/* ---------- actions ---------- */
+const msg=t=>{$('#msg').textContent=t};
+document.addEventListener('click',async ev=>{
+  const b=ev.target.closest('[data-act]');if(!b)return;
+  const a=b.dataset.act,id=b.dataset.id,d=day();
+  if(a==='day'){cur=id;open=null;renamingDay=false;render()}
+  else if(a==='addDay'){addingDay=true;render()}
+  else if(a==='cancelDay'){addingDay=false;render()}
+  else if(a==='renameDay'){renamingDay=true;render()}
+  else if(a==='delDay'){if(arm('day:'+id)){state.days=state.days.filter(x=>x.id!==id);cur=state.days[0]?.id||null;save()}}
+  else if(a==='toggle'){open=open===id?null:id;renamingEx=null;render();if(open)b.scrollIntoView({block:'nearest'})}
+  else if(a==='renameEx'){renamingEx=id;render()}
+  else if(a==='delEx'){if(arm('ex:'+id)){d.exercises=d.exercises.filter(x=>x.id!==id);open=null;save()}}
+  else if(a==='up'||a==='down'){const i=d.exercises.findIndex(x=>x.id===id),j=a==='up'?i-1:i+1;if(j<0||j>=d.exercises.length)return;[d.exercises[i],d.exercises[j]]=[d.exercises[j],d.exercises[i]];save()}
+  else if(a==='delEntry'){const t=+b.dataset.t;if(arm('e:'+t)){const x=exById(id);x.history=x.history.filter(e=>e.t!==t);save()}}
+  else if(a==='example'){
+    const t=Date.now(),mk=(n,h)=>({id:uid(),name:n,history:h.map((e,k)=>({date:e[0],s1:{w:e[1],r:e[2]},s2:{w:e[3],r:e[4]},t:t+k}))});
+    const dd={id:uid(),name:'Push (example)',sample:true,exercises:[
+      mk('Bench press',[['2026-10-12',80,6,75,8],['2026-11-09',82.5,6,77.5,8]]),
+      mk('Overhead press',[['2026-11-02',50,6,47.5,7]]),
+      mk('Incline dumbbell press',[]),mk('Triceps pushdown',[])]};
+    state.days.push(dd);cur=dd.id;save();
+  }
+  else if(a==='export'){
+    const data=JSON.stringify(state,null,2),name=`lift-log-${today()}.json`;
+    try{
+      const url=URL.createObjectURL(new Blob([data],{type:'application/json'}));
+      const l=document.createElement('a');l.href=url;l.download=name;document.body.appendChild(l);l.click();l.remove();
+      setTimeout(()=>URL.revokeObjectURL(url),5000);
+      try{localStorage.setItem(K+'.bk',Date.now())}catch(e){}
+      msg('Backup saved to your Downloads folder.');
+    }catch(e){msg('Download failed. Try “Copy as text”.')}
+  }
+  else if(a==='copy'){try{await navigator.clipboard.writeText(JSON.stringify(state));try{localStorage.setItem(K+'.bk',Date.now())}catch(e){}msg('Copied. Paste it into a note or file to keep it.')}catch(e){msg('Copy was blocked by the browser.')}}
+  else if(a==='import'){$('#file').click()}
+  else if(a==='doImport'){if(pendingImport){state=pendingImport;state.updated=Date.now();pendingImport=null;cur=state.days[0]?.id||null;open=null;$('#msg').innerHTML='';save();msg('Backup restored.')}}
+  else if(a==='cancelImport'){pendingImport=null;msg('')}
+});
+$('#file').addEventListener('change',async e=>{
+  const f=e.target.files[0];e.target.value='';if(!f)return;
+  try{const o=JSON.parse(await f.text());if(!valid(o))throw 0;pendingImport=o;
+    $('#msg').innerHTML=`Replace everything with this backup (${o.days.length} day${o.days.length===1?'':'s'})? <button class="small danger" data-act="doImport">Replace</button> <button class="small" data-act="cancelImport">Cancel</button>`;
+  }catch(err){msg('That file isn’t a Lift Log backup.')}
+});
+document.addEventListener('submit',ev=>{
+  ev.preventDefault();const f=ev.target,v=n=>(f.elements[n]?.value||'').trim(),d=day();
+  if(f.id==='fAddDay'){const n=v('n');if(!n)return;const nd={id:uid(),name:n,exercises:[]};state.days.push(nd);cur=nd.id;addingDay=false;open=null;save()}
+  else if(f.id==='fRenameDay'){const n=v('n');if(n)d.name=n;delete d.sample;renamingDay=false;save()}
+  else if(f.id==='fAddEx'){const n=v('n');if(!n)return;d.exercises.push({id:uid(),name:n,history:[]});save();$('#fAddEx input').focus()}
+  else if(f.id==='fRenameEx'){const x=exById(f.dataset.id),n=v('n');if(n)x.name=n;renamingEx=null;save()}
+  else if(f.id==='fLog'){
+    const x=exById(f.dataset.id),p=s=>parseFloat(v(s).replace(',','.'));
+    const w1=p('w1'),r1=parseInt(v('r1')),w2=p('w2'),r2=parseInt(v('r2')),both2=v('w2')||v('r2');
+    if(!(w1>=0)||!(r1>0)){formErr[x.id]='Enter weight and reps for set 1.';render();return}
+    if(both2&&(!(w2>=0)||!(r2>0))){formErr[x.id]='Set 2 needs both weight and reps (or leave both empty).';render();return}
+    delete formErr[x.id];
+    x.history.push({date:v('date')||today(),s1:{w:w1,r:r1},s2:both2?{w:w2,r:r2}:null,t:Date.now()});
+    save();
+  }
+});
+render();
+if(state.days.length&&Date.now()-lastBk>14*864e5)msg('Tip: it’s been a while since your last backup. Tap “Export file”.');
+}
+</script>
+</body>
+</html>
